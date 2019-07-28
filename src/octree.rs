@@ -17,12 +17,6 @@ pub struct Octree {
 enum Node {
     Branch { children: Box<[Node; 8]>, bbox: Bbox },
     Leaf { points: HashSet<Vec3>, bbox: Bbox },
-    //
-    // TODO: consider adding a Full{bbox: Bbox} variant which could be constructed when we know
-    // that a bbox is completely full (remember we're living in a finite space since we're using
-    // integer coordinates). This variant would drastically improve query time and also space
-    // requirements.
-    //
 }
 
 #[derive(Debug)]
@@ -329,6 +323,12 @@ fn partition_pt(p: Vec3, c: Vec3) -> usize {
         7
     } else {
         unreachable!()
+    }
+}
+
+impl Default for Octree {
+    fn default() -> Self {
+        Octree::new()
     }
 }
 

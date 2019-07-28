@@ -1,4 +1,3 @@
-use rand::seq::SliceRandom;
 use rand::Rng;
 
 pub mod geo;
@@ -24,19 +23,11 @@ impl Dla {
         attraction_radius: u16,
         seeds: impl IntoIterator<Item = Vec3>,
     ) -> Option<Self> {
-        let mut seeds = seeds.into_iter();
+        let cells: Octree = seeds.into_iter().collect();
 
-        let mut cells = Octree::new();
-
-        let first = seeds.next()?;
-        cells.add(first);
-
-        let mut bbox = Bbox::new(first);
-
-        for p in seeds {
-            cells.add(p);
-            bbox = bbox.expand(p);
-        }
+        let mut cells_it = cells.iter();
+        let first_p = cells_it.next()?;
+        let bbox = cells_it.fold(Bbox::new(*first_p), |b, p| b.expand(*p));
 
         Some(Dla {
             cells,
@@ -91,14 +82,13 @@ impl Dla {
                     break;
                 }
                 None => {
-                    let d = Vec3::new(
-                        rng.gen_range(1, self.attraction_radius / 2)
-                            * *[-1, 1].choose(rng).unwrap(),
-                        rng.gen_range(1, self.attraction_radius / 2)
-                            * *[-1, 1].choose(rng).unwrap(),
-                        rng.gen_range(1, self.attraction_radius / 2)
-                            * *[-1, 1].choose(rng).unwrap(),
-                    );
+                    let mut motion = || {
+                        let d = if rng.gen::<f32>() < 0.5 { -1 } else { 1 };
+                        rng.gen_range(1, self.attraction_radius / 2) * d
+                    };
+
+                    let d = Vec3::new(motion(), motion(), motion());
+
                     cell = cell + d * self.attraction_radius;
 
                     if !spawn_bbox.contains(cell) {

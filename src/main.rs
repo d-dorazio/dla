@@ -9,8 +9,6 @@ use structopt::StructOpt;
 
 use dla::{Dla, Vec3};
 
-pub type Rgb = [f64; 3];
-
 /// Simulate 3D diffusion limited aggregation (DLA for short) and save the final
 /// system as a scene ready to be rendered using povray for example.
 #[derive(StructOpt, Debug)]
@@ -167,14 +165,14 @@ camera {{
     let mut cells = dla.cells().map(|cc| (cc, center.dist2(*cc))).collect::<Vec<_>>();
     cells.sort_by_key(|(_, d)| *d);
 
-    let d = cells.last().expect("empty dla, cannot happen since it should be seeded").1;
+    let max_d = cells.last().expect("empty dla, cannot happen since it should be seeded").1;
     let mut cells = cells.into_iter();
 
     let gradients = 3;
     let n = gradients * 2;
     for i in 0..n {
         writeln!(out, "\nunion {{")?;
-        for (p, _) in cells.by_ref().take_while(|(_, dd)| *dd <= (i + 1) * d / n) {
+        for (p, _) in cells.by_ref().take_while(|(_, dd)| *dd <= (i + 1) * max_d / n) {
             writeln!(out, "  sphere {{ <{}, {}, {}>, 1 }}", p.x, p.y, p.z)?;
         }
 
@@ -284,6 +282,7 @@ impl Scene {
         let scene_bbox = dla.bbox();
         let scene_dimensions = scene_bbox.dimensions();
         let away_dist = scene_dimensions.x.min(scene_dimensions.y).min(scene_dimensions.z);
+
         let camera = Camera {
             position: Vec3::new(
                 scene_bbox.center().x - away_dist,
@@ -292,8 +291,8 @@ impl Scene {
             ),
             target: Vec3::new(0, 0, 0),
         };
-        let mut lights = vec![];
 
+        let mut lights = vec![];
         let mut add_light = |pt: Vec3, intensity| {
             let position = pt + (pt - scene_bbox.center()).normalized() * away_dist;
             lights.push(Light { position, intensity })
@@ -342,6 +341,7 @@ impl Scene {
 
 impl std::str::FromStr for SceneFormat {
     type Err = String;
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "povray" => Ok(SceneFormat::Povray),
