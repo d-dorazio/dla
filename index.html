@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title>Simple 3d Dla Viewer</title>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+        <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+        <script src="dla.js"></script>
+    </head>
+
+   <body>
+
+    <canvas id="renderCanvas" touch-action="none"></canvas>
+
+    <script>
+        function renderDLA() {
+            var canvas = document.getElementById("renderCanvas");
+            var engine = new BABYLON.Engine(canvas, true);
+            var rotate = false;
+
+            var createScene = function () {
+                var scene = new BABYLON.Scene(engine);
+
+                var mat = new BABYLON.StandardMaterial("mat1", scene);
+                mat.diffuseColor = new BABYLON.Color3(0.1, 0.3, 0.1);
+
+                var camera = new BABYLON.ArcRotateCamera(
+                    "Camera",
+                    0,0,5,
+                    new BABYLON.Vector3(DLA.camera.look_at.x, DLA.camera.look_at.y, DLA.camera.look_at.z),
+                    scene
+                );
+                camera.setPosition(new BABYLON.Vector3(
+                    DLA.camera.position.x,
+                    DLA.camera.position.y,
+                    DLA.camera.position.z,
+                ));
+                camera.attachControl(canvas, true);
+
+                var ssao = new BABYLON.SSAORenderingPipeline("ssao", scene, 1, camera);
+                ssao.fallOff = 0.000001;
+                ssao.area = 1;
+                ssao.radius = 0.0001;
+                ssao.totalStrength = 1.0;
+                ssao.base = 0.5;
+
+                var lights = [];
+                for (var i = 0; i < DLA.lights.length; ++i) {
+                    var light = DLA.lights[i];
+
+                    var pointLight =
+                        new BABYLON.PointLight(
+                            "light" + i,
+                            new BABYLON.Vector3(light.position.x, light.position.y, light.position.z),
+                            scene,
+                        );
+                    pointLight.intensity = light.intensity;
+                    lights.push(pointLight);
+                }
+                mat.maxSimultaneousLights = lights.length;
+
+                var SPS = new BABYLON.SolidParticleSystem('SPS', scene);
+                var shape = BABYLON.MeshBuilder.CreateSphere("s", {segments: 4, diameter: 2}, scene);
+                SPS.addShape(shape, DLA.particles.length);
+
+                var mesh = SPS.buildMesh();
+                mesh.material = mat;
+                shape.dispose();
+
+                SPS.initParticles = function() {
+                    for (var p = 0; p < this.nbParticles; p++) {
+                        var particle = this.particles[p];
+                        particle.id = p;
+                        particle.position.x = DLA.particles[p].x;
+                        particle.position.y = DLA.particles[p].y;
+                        particle.position.z = DLA.particles[p].z;
+                    }
+                };
+
+                scene.registerBeforeRender(function() {
+                    if (!rotate) {
+                        return;
+                    }
+
+                    SPS.mesh.rotation.y += 0.01;
+                    if (SPS.mesh.rotation.y > Math.PI * 2) {
+                        SPS.mesh.rotation.y -= Math.PI * 2;
+                    }
+                });
+
+                SPS.initParticles();
+                SPS.setParticles();
+
+                return scene;
+            };
+
+            var scene = createScene();
+
+            engine.runRenderLoop(function() {
+                scene.render();
+            });
+            window.addEventListener("resize", function() {
+                engine.resize();
+            });
+            window.addEventListener("keydown", function(k) {
+                if (k.key === 'r') {
+                    rotate = !rotate;
+                }
+            });
+        }
+
+        var hasDLA = false;
+        try {
+            DLA;
+            hasDLA = true;
+        } catch (e) {
+            alert("Please run the dla generator, save the final scene as js and " +
+                  "put that file in the same directory as this one.");
+        }
+
+        if (hasDLA) {
+            renderDLA();
+        }
+    </script>
+
+   </body>
+</html>
