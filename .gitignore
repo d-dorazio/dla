@@ -1,6 +1,7 @@
 /target
 **/*.rs.bk
 
+dla.csv
 dla.js
 dla.png
 dla.pov

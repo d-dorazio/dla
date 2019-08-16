@@ -27,8 +27,8 @@ struct App {
     #[structopt(short = "g", long = "spawn-radius", default_value = "10")]
     spawn_radius: u32,
 
-    /// The output formats the scene should be saved as. As of now `javascript`
-    /// and `povray` are supported.
+    /// The output formats the scene should be saved as. As of now `javascript,
+    /// `povray` and `csv` are supported.
     #[structopt(short = "s", long = "scene-format", default_value = "povray")]
     scene_formats: Vec<SceneFormat>,
 
@@ -41,6 +41,7 @@ struct App {
 enum SceneFormat {
     Povray,
     Js,
+    Csv,
 }
 
 #[derive(Debug)]
@@ -79,7 +80,7 @@ fn main() -> io::Result<()> {
         dla.add(&mut rng);
     }
 
-    // clear progress line manually
+    // clear progress line manually to not install another dep
     println!(
         "\r          {:width$}                          ",
         " ",
@@ -112,6 +113,7 @@ It contains {} particles and its bounding box goes from
         match r {
             SceneFormat::Povray => save_pov_scene(&args.output, &scene)?,
             SceneFormat::Js => save_js_scene(&args.output, &scene)?,
+            SceneFormat::Csv => save_csv_scene(&args.output, &scene)?,
         }
     }
 
@@ -275,6 +277,25 @@ single object `DLA` that has the `particles` alongside a `camera` and `lights`.
     Ok(())
 }
 
+fn save_csv_scene(path: &PathBuf, Scene { dla, .. }: &Scene) -> io::Result<()> {
+    let path = path.with_extension("csv");
+    let mut out = BufWriter::new(File::create(&path)?);
+
+    for c in dla.cells() {
+        writeln!(out, "{},{},{}", c.x, c.y, c.z)?;
+    }
+
+    println!(
+        r#"## Csv Scene
+
+The positions (x,y,z) of all the cells that form the DLA have been saved as a CSV file ({path}).
+"#,
+        path = path.display()
+    );
+
+    Ok(())
+}
+
 impl Scene {
     /// build a scene from a DLA with camera and lights in a completely
     /// arbitrary way.
@@ -346,6 +367,7 @@ impl std::str::FromStr for SceneFormat {
         match s {
             "povray" => Ok(SceneFormat::Povray),
             "javascript" | "js" => Ok(SceneFormat::Js),
+            "csv" => Ok(SceneFormat::Csv),
             s => Err(format!("`{}` is not a valid scene format", s)),
         }
     }
