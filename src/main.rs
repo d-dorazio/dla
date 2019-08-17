@@ -80,12 +80,8 @@ fn main() -> io::Result<()> {
         dla.add(&mut rng);
     }
 
-    // clear progress line manually to not install another dep
-    println!(
-        "\r          {:width$}                          ",
-        " ",
-        width = args.particles.to_string().len()
-    );
+    // clear current line, let's try to avoid another dep for this single line of code
+    println!("\r\x1B[2K");
 
     let duration = start.elapsed();
 
