@@ -25,8 +25,21 @@ $ cargo run --release -- -p 10000 -a 8 -g 30 -s js
 $ firefox index.html
 ```
 
+## Raw CSV dump
+
+In case you want to render the system by yourself then feel free to use the
+`csv` scene format to save the cells in the DLA system. As an example, take a
+look at how I can render it with [Buzz, my ray tracer][particles-buzz].
+
+```shell
+$ cargo run --release -- -p 10000 -a 8 -g 30 -s csv
+$ cd ../r3d && cargo run --release --example particles < dla/dla.csv
+```
+
 ## Example
 
 ![dla-2k](images/dla-small.png)
+![dla-2k-buzz](images/dla-small-buzz.png)
 
 [dla]: https://en.wikipedia.org/wiki/Diffusion-limited_aggregation
+[particles-buzz]: https://github.com/d-dorazio/r3d/blob/master/buzz/examples/particles.rs
