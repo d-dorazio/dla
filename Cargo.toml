@@ -6,8 +6,8 @@ edition = "2018"
 
 [dependencies]
 rand = "0.7"
-structopt = "0.2"
-hashbrown = "0.5"
+structopt = "0.3"
+hashbrown = "0.6"
 
 [dev-dependencies]
 proptest = "0.9"
