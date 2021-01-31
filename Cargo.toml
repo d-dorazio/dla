@@ -5,9 +5,9 @@ authors = ["Daniele D'Orazio <d.dorazio96@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-rand = "0.7"
+rand = "0.8"
 structopt = "0.3"
-hashbrown = "0.6"
+hashbrown = "0.9"
 
 [dev-dependencies]
-proptest = "0.9"
+proptest = "0.10"

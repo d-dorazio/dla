@@ -62,9 +62,9 @@ impl Dla {
 
         let respawn_cell = |rng: &mut R| {
             Vec3::new(
-                rng.gen_range(spawn_bbox.lower().x, spawn_bbox.upper().x + 1),
-                rng.gen_range(spawn_bbox.lower().y, spawn_bbox.upper().y + 1),
-                rng.gen_range(spawn_bbox.lower().z, spawn_bbox.upper().z + 1),
+                rng.gen_range(spawn_bbox.lower().x..=spawn_bbox.upper().x),
+                rng.gen_range(spawn_bbox.lower().y..=spawn_bbox.upper().y),
+                rng.gen_range(spawn_bbox.lower().z..=spawn_bbox.upper().z),
             )
         };
 
@@ -84,7 +84,7 @@ impl Dla {
                 None => {
                     let mut motion = || {
                         let d = if rng.gen::<f32>() < 0.5 { -1 } else { 1 };
-                        rng.gen_range(1, self.attraction_radius / 2) * d
+                        rng.gen_range(1..self.attraction_radius / 2) * d
                     };
 
                     let d = Vec3::new(motion(), motion(), motion());
